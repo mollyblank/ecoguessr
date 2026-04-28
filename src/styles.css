@@ -1,0 +1,588 @@
+:root {
+  --font-display: "Nunito", system-ui, sans-serif;
+  --font-title: "Fraunces", "Nunito", serif;
+
+  /* Meadow palette */
+  --bg: #f5efde;
+  --cream: #fff8e1;
+  --parchment: #fcf3d4;
+  --ink: #1d2a22;
+  --muted: #6f7a6e;
+  --sky: #a8d8ea;
+  --ocean: #5a8db5;
+  --land: #88a36b;
+  --land-light: #a8c389;
+  --land-dark: #5a7547;
+  --leaf-dark: #2d4a32;
+  --leaf-mid: #5a8a4a;
+  --leaf-light: #9bc26b;
+  --bark-dark: #5a3e2a;
+  --bark-mid: #7a5a3e;
+  --bark-light: #a07e58;
+  --soil: #8a6a4a;
+  --soil-light: #b89878;
+  --coral: #e26d5a;
+  --bloom-pink: #f48ca0;
+  --bloom-yellow: #ffd166;
+  --bloom-coral: #f4a261;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  font-family: var(--font-display);
+  background: var(--bg);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1); }
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+
+.app {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.map-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Pixel frame ─────────────────────────────────────── */
+
+.frame-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.frame-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* ── HUD ─────────────────────────────────────────────── */
+
+.hud {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  z-index: 6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.hud > * { pointer-events: auto; }
+
+.hud-title {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 30px;
+  color: var(--cream);
+  letter-spacing: 0.5px;
+  text-shadow: 3px 3px 0 var(--ink);
+}
+
+.hud-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ── Chunky HUD chips ────────────────────────────────── */
+
+.hud-chip {
+  padding: 8px 14px;
+  background: var(--cream);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.hud-chip.round-chip {
+  background: var(--coral);
+  color: var(--cream);
+  font-weight: 700;
+}
+
+.hud-chip.score-chip {
+  background: var(--bloom-yellow);
+  font-weight: 700;
+}
+
+.hud-chip.region-chip {
+  padding: 0;
+  overflow: hidden;
+}
+
+.hud-chip.region-chip select {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 8px 30px 8px 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink);
+  cursor: pointer;
+  /* chevron icon */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><polygon points='0,0 10,0 5,6' fill='%231d2a22'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.hud-chip.region-chip select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* ── Map markers ─────────────────────────────────────── */
+
+.truth-marker .truth-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bloom-yellow);
+  border: 3px solid var(--ink);
+  box-shadow: 0 0 0 2px var(--bloom-yellow);
+}
+
+/* warm up the leaflet attribution to fit the palette */
+.leaflet-control-attribution {
+  background: rgba(245, 239, 222, 0.85) !important;
+  color: var(--ink) !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--leaf-dark) !important;
+}
+
+/* ── Lantern (audio play button) ─────────────────────── */
+
+.audio-module {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.lantern {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  filter: drop-shadow(4px 4px 0 var(--ink));
+  flex-shrink: 0;
+}
+
+.lantern-glow {
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.55) 0%, rgba(255, 209, 102, 0) 70%);
+  pointer-events: none;
+}
+
+.lantern-glow.playing {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.lantern-btn {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid var(--ink);
+  background: radial-gradient(circle at 30% 28%, #ffe89c 0%, #ffd166 45%, #f4a261 100%);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Audio card ──────────────────────────────────────── */
+
+.audio-card {
+  padding: 14px 18px;
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+}
+
+.audio-card-meta {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.audio-card-waverow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  flex: 1;
+}
+
+.waveform-bar {
+  width: 3px;
+  background: var(--leaf-dark);
+  transform-origin: center;
+}
+
+.waveform-bar.playing {
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+.audio-length {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.audio-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.small-btn {
+  padding: 5px 10px;
+  background: var(--bg);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.small-btn:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+/* ── Clues card ──────────────────────────────────────── */
+
+.clues-card {
+  padding: 14px 16px;
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+  max-width: 240px;
+}
+
+.clues-card-header {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.clues-card-body {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.clue-label {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.clue-value {
+  color: var(--ink);
+}
+
+/* ── Control deck (bottom strip — guessing) ──────────── */
+
+.control-deck {
+  position: absolute;
+  bottom: 52px;
+  left: 24px;
+  right: 24px;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+/* ── Submit button ───────────────────────────────────── */
+
+.submit-btn {
+  padding: 14px 24px;
+  background: var(--coral);
+  color: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 var(--ink);
+  transition: transform 0.1s;
+  flex-shrink: 0;
+}
+
+.submit-btn:disabled {
+  background: var(--muted);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: translateY(2px);
+  cursor: not-allowed;
+}
+
+/* ── Reveal card (bottom floating — revealed) ────────── */
+
+.reveal-card {
+  position: absolute;
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 16px 22px;
+  background: var(--parchment);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 5px 5px 0 var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  max-width: 780px;
+  width: max-content;
+}
+
+.reveal-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.reveal-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.reveal-bird-name {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.reveal-sci {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.reveal-metrics {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.reveal-metric {
+  padding: 6px 16px;
+  border-left: 3px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 110px;
+}
+
+.reveal-metric-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.reveal-metric-value {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-top: 4px;
+  color: var(--ink);
+}
+
+.reveal-metric-value.accent { color: var(--leaf-dark); }
+
+.next-btn {
+  padding: 12px 18px;
+  background: var(--coral);
+  color: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  flex-shrink: 0;
+}
+
+.next-btn:hover { filter: brightness(1.05); }
+
+/* ── Idle overlay ────────────────────────────────────── */
+
+.idle-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.idle-overlay > * { pointer-events: auto; }
+
+.idle-title {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: clamp(36px, 7vw, 64px);
+  color: var(--cream);
+  text-shadow: 4px 4px 0 var(--ink);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.idle-start-btn {
+  padding: 16px 32px;
+  background: var(--bloom-yellow);
+  border: 4px solid var(--ink);
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  cursor: pointer;
+}
+
+.idle-start-btn:hover { filter: brightness(1.05); }
+
+/* ── Loading / error overlays ────────────────────────── */
+
+.status-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.status-msg {
+  padding: 16px 24px;
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status-msg.error {
+  background: #fff0ed;
+  color: #b83232;
+}
+
+/* ── Map crosshair hint ──────────────────────────────── */
+
+.map-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  padding: 10px 16px;
+  background: rgba(29, 42, 34, 0.82);
+  color: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  font-size: 16px;
+  box-shadow: 3px 3px 0 var(--ink);
+  pointer-events: none;
+  white-space: nowrap;
+}
