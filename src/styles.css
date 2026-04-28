@@ -586,3 +586,53 @@ button:focus-visible {
   pointer-events: none;
   white-space: nowrap;
 }
+
+/* ── Mobile ──────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  /* HUD: hide title to make room for chips */
+  .hud { left: 12px; right: 12px; gap: 6px; }
+  .hud-title { display: none; }
+  .hud-chip { padding: 5px 10px; font-size: 13px; gap: 5px; }
+  .hud-chip.region-chip select { padding: 5px 22px 5px 10px; font-size: 13px; }
+
+  /* Control deck: stack audio + submit vertically */
+  .control-deck {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    bottom: 44px;
+    left: 12px;
+    right: 12px;
+  }
+
+  /* Audio module: shrink lantern, let card fill remaining width */
+  .audio-module { gap: 10px; }
+  .lantern { width: 80px; height: 80px; }
+  .audio-card { min-width: 0; flex: 1; padding: 10px 12px; }
+
+  /* Field notes not visible on mobile */
+  .clues-card { display: none; }
+
+  /* Submit button: full width */
+  .submit-btn { width: 100%; font-size: 16px; padding: 12px 20px; }
+
+  /* Reveal card: full width, stacked */
+  .reveal-card {
+    left: 12px;
+    right: 12px;
+    bottom: 44px;
+    width: auto;
+    transform: none;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+  .reveal-bird-name { font-size: 20px; }
+  .reveal-sci { font-size: 12px; }
+  .reveal-metrics { border-top: 3px solid var(--ink); padding-top: 8px; }
+  .reveal-metric { min-width: 0; flex: 1; }
+  .reveal-metric:first-child { border-left: none; }
+  .reveal-metric-value { font-size: 22px; }
+  .next-btn { width: 100%; }
+}
